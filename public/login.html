@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrar — Tratativas de Campo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="login-body">
+  <form class="login-box" id="login-form">
+    <div class="mark" style="justify-content:center;margin-bottom:6px;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#3E93A6"/></svg>
+      <h1 style="font-size:1.3rem;">Tratativas de campo</h1>
+    </div>
+    <p class="sub">Entre para lançar e acompanhar tratativas</p>
+    <div class="field">
+      <label>Usuário</label>
+      <input type="text" id="usuario" autocomplete="username" required>
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="senha" autocomplete="current-password" required>
+    </div>
+    <div class="erro" id="erro" style="display:none;"></div>
+    <button type="submit" class="btn btn-primary" style="width:100%;margin-top:6px;">Entrar</button>
+  </form>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const usuario = document.getElementById('usuario').value.trim();
+  const senha = document.getElementById('senha').value;
+  const erroEl = document.getElementById('erro');
+  erroEl.style.display = 'none';
+  try{
+    const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({usuario, senha}) });
+    const data = await r.json();
+    if(data.ok){ window.location.href = '/'; }
+    else{ erroEl.textContent = data.erro || 'Não foi possível entrar.'; erroEl.style.display = 'block'; }
+  }catch(err){ erroEl.textContent = 'Erro de conexão.'; erroEl.style.display = 'block'; }
+});
+</script>
+</body>
+</html>
