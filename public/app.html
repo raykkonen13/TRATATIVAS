@@ -34,6 +34,7 @@
     <div class="stat andamento"><div class="num" id="stat-andamento">0</div><div class="lbl">Em andamento</div></div>
     <div class="stat concluido"><div class="num" id="stat-concluido">0</div><div class="lbl">Concluídas</div></div>
     <div class="stat vencido"><div class="num" id="stat-vencido">0</div><div class="lbl">Vencidas</div></div>
+    <div class="stat recorrencia"><div class="num" id="stat-recorrencia">0</div><div class="lbl">Recorrência</div></div>
   </div>
 
   <!-- NOVA TRATATIVA -->
@@ -146,6 +147,9 @@
         <option>Leve</option>
       </select>
       <input type="text" id="filtro-placa" placeholder="Filtrar por placa ou frota" style="width:180px;">
+      <select id="filtro-lista-dia"></select>
+      <select id="filtro-lista-mes"></select>
+      <select id="filtro-lista-ano"></select>
       <div class="spacer"></div>
       <button class="btn btn-sm" id="btn-relatorio">Baixar relatório completo (PDF)</button>
     </div>

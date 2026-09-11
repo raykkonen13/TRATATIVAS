@@ -157,6 +157,10 @@
   document.getElementById('filtro-status').addEventListener('change', renderLista);
   document.getElementById('filtro-gravidade').addEventListener('change', renderLista);
   document.getElementById('filtro-placa').addEventListener('input', renderLista);
+  ['filtro-lista-dia','filtro-lista-mes','filtro-lista-ano'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('change', renderLista);
+  });
 
   // ---------- render ----------
   function render(){ renderStats(); renderLista(); popularFiltrosData(); renderPainel(); }
@@ -167,6 +171,8 @@
     document.getElementById('stat-andamento').textContent = list.filter(t=>t.status==='Em andamento').length;
     document.getElementById('stat-concluido').textContent = list.filter(t=>t.status==='Concluído').length;
     document.getElementById('stat-vencido').textContent = list.filter(t=>t.status==='Vencido' || isOverdue(t)).length;
+    const recorrentes = calcularRecorrenciaPorFrota(list);
+    document.getElementById('stat-recorrencia').textContent = Object.keys(recorrentes).length;
   }
 
   function renderLista(){
@@ -178,6 +184,7 @@
       if(fStatus && t.status !== fStatus) return false;
       if(fGrav && t.gravidade !== fGrav) return false;
       if(fPlaca && !((t.placa||'').toLowerCase().includes(fPlaca) || (t.frota||'').toLowerCase().includes(fPlaca))) return false;
+      if(!passaFiltroData(t, 'filtro-lista-dia', 'filtro-lista-mes', 'filtro-lista-ano')) return false;
       return true;
     });
 
@@ -301,10 +308,10 @@
   // ---------- painel / filtros de data ----------
   const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-  function popularFiltrosData(){
-    const diaSel = document.getElementById('filtro-dia');
-    const mesSel = document.getElementById('filtro-mes');
-    const anoSel = document.getElementById('filtro-ano');
+  function popularSelectData(diaId, mesId, anoId){
+    const diaSel = document.getElementById(diaId);
+    const mesSel = document.getElementById(mesId);
+    const anoSel = document.getElementById(anoId);
     if(!diaSel || !mesSel || !anoSel) return;
 
     if(!diaSel.dataset.pronto){
@@ -324,42 +331,36 @@
     if(anos.includes(Number(anoAtual))) anoSel.value = anoAtual;
   }
 
+  function popularFiltrosData(){
+    popularSelectData('filtro-dia', 'filtro-mes', 'filtro-ano');
+    popularSelectData('filtro-lista-dia', 'filtro-lista-mes', 'filtro-lista-ano');
+  }
+
   ['filtro-dia','filtro-mes','filtro-ano'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('change', renderPainel);
   });
 
+  function passaFiltroData(t, diaId, mesId, anoId){
+    const dia = document.getElementById(diaId)?.value;
+    const mes = document.getElementById(mesId)?.value;
+    const ano = document.getElementById(anoId)?.value;
+    if(!dia && !mes && !ano) return true;
+    if(!t.created_at) return false;
+    const d = new Date(t.created_at);
+    if(dia && d.getDate() !== Number(dia)) return false;
+    if(mes && (d.getMonth()+1) !== Number(mes)) return false;
+    if(ano && d.getFullYear() !== Number(ano)) return false;
+    return true;
+  }
+
   function tratativasFiltradasPainel(){
-    const dia = document.getElementById('filtro-dia')?.value;
-    const mes = document.getElementById('filtro-mes')?.value;
-    const ano = document.getElementById('filtro-ano')?.value;
-    return state.tratativas.filter(t=>{
-      if(!t.created_at) return false;
-      const d = new Date(t.created_at);
-      if(dia && d.getDate() !== Number(dia)) return false;
-      if(mes && (d.getMonth()+1) !== Number(mes)) return false;
-      if(ano && d.getFullYear() !== Number(ano)) return false;
-      return true;
-    });
+    return state.tratativas.filter(t=>passaFiltroData(t, 'filtro-dia', 'filtro-mes', 'filtro-ano'));
   }
 
   const CORES_FROTA = ['#3E93A6','#E0A83E','#D6564C','#4C9E71','#8B6FD6','#D67AB8','#6FA8D6','#B8A24C','#5CBFAE','#C97C4C'];
 
-  function renderPainel(){
-    const painel = document.getElementById('view-painel');
-    if(!painel) return;
-    const list = tratativasFiltradasPainel();
-
-    // gráfico 1: situação
-    const contagem = { 'Em andamento':0, 'Concluído':0, 'Vencido':0 };
-    list.forEach(t=>{ if(contagem.hasOwnProperty(t.status)) contagem[t.status]++; });
-    drawPieChart('chart-status', [
-      { label:'Em andamento', value: contagem['Em andamento'], color:'#3E93A6' },
-      { label:'Concluído', value: contagem['Concluído'], color:'#4C9E71' },
-      { label:'Vencido', value: contagem['Vencido'], color:'#D6564C' }
-    ], 'Nenhuma tratativa no período selecionado.');
-
-    // gráfico 2: frotas com não conformidades recorrentes
+  function calcularRecorrenciaPorFrota(list){
     // recorrente = a mesma frota tem 2 ou mais tratativas lançadas com a mesma gravidade
     const porFrotaGravidade = {};
     list.forEach(t=>{
@@ -373,6 +374,23 @@
       const frota = chave.split('||')[0];
       totalPorFrota[frota] = (totalPorFrota[frota] || 0) + qtd;
     });
+    return totalPorFrota;
+  }
+
+  function renderPainel(){
+    const painel = document.getElementById('view-painel');
+    if(!painel) return;
+    const list = tratativasFiltradasPainel();
+
+    const contagem = { 'Em andamento':0, 'Concluído':0, 'Vencido':0 };
+    list.forEach(t=>{ if(contagem.hasOwnProperty(t.status)) contagem[t.status]++; });
+    drawPieChart('chart-status', [
+      { label:'Em andamento', value: contagem['Em andamento'], color:'#3E93A6' },
+      { label:'Concluído', value: contagem['Concluído'], color:'#4C9E71' },
+      { label:'Vencido', value: contagem['Vencido'], color:'#D6564C' }
+    ], 'Nenhuma tratativa no período selecionado.');
+
+    const totalPorFrota = calcularRecorrenciaPorFrota(list);
     const dadosFrota = Object.entries(totalPorFrota)
       .sort((a,b)=>b[1]-a[1])
       .map(([frota, qtd], i)=>({ label: frota, value: qtd, color: CORES_FROTA[i % CORES_FROTA.length] }));

@@ -34,13 +34,14 @@ header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:1
 .tab-btn.active{background:var(--accent);color:var(--accent-text);font-weight:600;}
 .tab-btn:not(.active):hover{color:var(--text);background:var(--panel-2);}
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px;}
 .stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
 .stat .num{font-family:var(--mono);font-size:1.6rem;font-weight:600;line-height:1;}
 .stat .lbl{margin-top:6px;font-size:0.78rem;color:var(--text-dim);}
 .stat.andamento .num{color:var(--accent);}
 .stat.concluido .num{color:var(--ok);}
 .stat.vencido .num{color:var(--danger);}
+.stat.recorrencia .num{color:var(--warning);}
 
 section.view{display:none;}
 section.view.active{display:block;}
