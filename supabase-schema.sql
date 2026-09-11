@@ -6,7 +6,10 @@ create table if not exists tratativas (
   codigo text,
   descricao text not null,
   supervisor text,
+  encarregado text,
   lancado_por text,
+  frota text,
+  placa text,
   email text,
   cc text[] default '{}',
   prazo date,
@@ -20,3 +23,10 @@ create table if not exists tratativas (
 
 create index if not exists idx_tratativas_status on tratativas (status);
 create index if not exists idx_tratativas_token on tratativas (approval_token);
+create index if not exists idx_tratativas_placa on tratativas (placa);
+
+-- Se a tabela "tratativas" já existir no seu Supabase (instalação anterior a estes
+-- 3 campos novos), rode as linhas abaixo para adicioná-los sem perder os dados:
+alter table tratativas add column if not exists encarregado text;
+alter table tratativas add column if not exists frota text;
+alter table tratativas add column if not exists placa text;

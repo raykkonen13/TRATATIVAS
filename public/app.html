@@ -84,8 +84,23 @@
           </div>
 
           <div class="field">
+            <label>Encarregado</label>
+            <input type="text" id="encarregado-input" placeholder="Nome do encarregado">
+          </div>
+
+          <div class="field">
             <label>Lançado por</label>
             <input type="text" id="lancador-input" placeholder="Seu nome">
+          </div>
+
+          <div class="field">
+            <label>Frota</label>
+            <input type="text" id="frota-input" placeholder="Ex.: Frota 12">
+          </div>
+
+          <div class="field">
+            <label>Placa</label>
+            <input type="text" id="placa-input" placeholder="Ex.: ABC1D23">
           </div>
 
           <div class="field full">
@@ -129,6 +144,7 @@
         <option>Grave</option>
         <option>Leve</option>
       </select>
+      <input type="text" id="filtro-placa" placeholder="Filtrar por placa ou frota" style="width:180px;">
       <div class="spacer"></div>
       <button class="btn btn-sm" id="btn-relatorio">Baixar relatório completo (PDF)</button>
     </div>

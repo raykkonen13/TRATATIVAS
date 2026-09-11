@@ -109,7 +109,10 @@
     e.preventDefault();
     const descricao = document.getElementById('descricao-input').value.trim();
     const supervisor = document.getElementById('supervisor-input').value.trim();
+    const encarregado = document.getElementById('encarregado-input').value.trim();
     const lancadoPor = document.getElementById('lancador-input').value.trim();
+    const frota = document.getElementById('frota-input').value.trim();
+    const placa = document.getElementById('placa-input').value.trim();
     const email = document.getElementById('email-input').value.trim();
 
     if(!state.sevAtual){ toast('Escolha a gravidade do ocorrido.'); return; }
@@ -121,7 +124,7 @@
       foto: state.fotoAtual,
       gravidade: state.sevAtual,
       codigo: document.getElementById('codigo-input').value.trim(),
-      descricao, supervisor, lancadoPor, email,
+      descricao, supervisor, encarregado, lancadoPor, frota, placa, email,
       cc: [
         document.getElementById('cc1-input').value.trim(),
         document.getElementById('cc2-input').value.trim(),
@@ -153,6 +156,7 @@
   // ---------- filtros ----------
   document.getElementById('filtro-status').addEventListener('change', renderLista);
   document.getElementById('filtro-gravidade').addEventListener('change', renderLista);
+  document.getElementById('filtro-placa').addEventListener('input', renderLista);
 
   // ---------- render ----------
   function render(){ renderStats(); renderLista(); }
@@ -169,9 +173,11 @@
     const container = document.getElementById('lista-container');
     const fStatus = document.getElementById('filtro-status').value;
     const fGrav = document.getElementById('filtro-gravidade').value;
+    const fPlaca = document.getElementById('filtro-placa').value.trim().toLowerCase();
     let list = state.tratativas.filter(t=>{
       if(fStatus && t.status !== fStatus) return false;
       if(fGrav && t.gravidade !== fGrav) return false;
+      if(fPlaca && !((t.placa||'').toLowerCase().includes(fPlaca) || (t.frota||'').toLowerCase().includes(fPlaca))) return false;
       return true;
     });
 
@@ -201,7 +207,10 @@
           <p class="li-title">${escapeHtml(t.descricao)}</p>
           <div class="li-meta">
             <span>Supervisor: ${escapeHtml(t.supervisor)||'—'}</span>
+            <span>Encarregado: ${escapeHtml(t.encarregado)||'—'}</span>
             <span>Lançado por: ${escapeHtml(t.lancado_por)||'—'}</span>
+            ${t.frota ? `<span>Frota: ${escapeHtml(t.frota)}</span>` : ''}
+            ${t.placa ? `<span>Placa: ${escapeHtml(t.placa)}</span>` : ''}
             <span>Prazo: ${formatDate(t.prazo)}</span>
             ${decisao ? `<span>${decisao}</span>` : (t.email ? '<span>Aguardando resposta do destinatário</span>' : '')}
           </div>
@@ -263,7 +272,10 @@
         <dt>Situação</dt><dd>${t.status}${isOverdue(t) ? ' (prazo estourado)' : ''}</dd>
         <dt>Descrição</dt><dd>${escapeHtml(t.descricao)}</dd>
         <dt>Supervisor</dt><dd>${escapeHtml(t.supervisor)||'—'}</dd>
+        <dt>Encarregado</dt><dd>${escapeHtml(t.encarregado)||'—'}</dd>
         <dt>Lançado por</dt><dd>${escapeHtml(t.lancado_por)||'—'}</dd>
+        <dt>Frota</dt><dd>${escapeHtml(t.frota)||'—'}</dd>
+        <dt>Placa</dt><dd>${escapeHtml(t.placa)||'—'}</dd>
         <dt>Destinatário principal</dt><dd>${escapeHtml(t.email)||'—'}</dd>
         <dt>Em cópia</dt><dd>${(t.cc && t.cc.length) ? t.cc.map(escapeHtml).join(', ') : '—'}</dd>
         <dt>Prazo</dt><dd>${formatDate(t.prazo)}</dd>
