@@ -91,7 +91,32 @@
       document.querySelectorAll('.sev-opt').forEach(o=>o.classList.remove('selected'));
       opt.classList.add('selected');
       state.sevAtual = opt.dataset.sev;
+      popularCodigos(state.sevAtual);
     });
+  });
+
+  // ---------- código da NC (depende da gravidade) ----------
+  function popularCodigos(gravidade){
+    const sel = document.getElementById('codigo-input');
+    const hint = document.getElementById('codigo-desc-hint');
+    const lista = gravidade && window.NC_CODES ? window.NC_CODES[gravidade] : null;
+    if(!lista){
+      sel.innerHTML = '<option value="">Selecione a gravidade acima primeiro</option>';
+      sel.disabled = true;
+      if(hint) hint.textContent = '';
+      return;
+    }
+    sel.disabled = false;
+    sel.innerHTML = '<option value="">Selecione o código da NC</option>' +
+      lista.map(item=>`<option value="${item.code}">${item.code} — ${escapeHtml(item.desc.length>68 ? item.desc.slice(0,68)+'…' : item.desc)}</option>`).join('');
+    if(hint) hint.textContent = '';
+  }
+  document.getElementById('codigo-input').addEventListener('change', ()=>{
+    const hint = document.getElementById('codigo-desc-hint');
+    const lista = state.sevAtual && window.NC_CODES ? window.NC_CODES[state.sevAtual] : null;
+    const val = document.getElementById('codigo-input').value;
+    const item = lista ? lista.find(i=>i.code===val) : null;
+    if(hint) hint.textContent = item ? item.desc : '';
   });
 
   // ---------- form ----------
@@ -103,6 +128,7 @@
     photoPreview.style.display = 'none';
     photoPlaceholder.style.display = 'flex';
     document.querySelectorAll('.sev-opt').forEach(o=>o.classList.remove('selected'));
+    popularCodigos(null);
   }
 
   document.getElementById('form-tratativa').addEventListener('submit', async e=>{

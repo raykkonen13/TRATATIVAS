@@ -66,8 +66,11 @@
           </div>
 
           <div class="field">
-            <label>Código da NC (opcional)</label>
-            <input type="text" id="codigo-input" placeholder="Ex.: GV104, G0501, L0620">
+            <label>Código da NC</label>
+            <select id="codigo-input" disabled>
+              <option value="">Selecione a gravidade acima primeiro</option>
+            </select>
+            <div class="hint" id="codigo-desc-hint"></div>
           </div>
 
           <div class="field">
@@ -199,6 +202,7 @@
 
 <div class="modal-bg" id="modal-bg"><div class="modal" id="modal-content"></div></div>
 
+<script src="/nc-codes.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>
