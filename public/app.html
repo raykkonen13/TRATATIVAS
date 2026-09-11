@@ -23,6 +23,7 @@
       <div class="tabs">
         <button class="tab-btn active" data-view="novo">Nova tratativa</button>
         <button class="tab-btn" data-view="lista">Tratativas</button>
+        <button class="tab-btn" data-view="painel">Painel</button>
       </div>
       <button class="btn btn-ghost btn-sm" id="btn-logout">Sair</button>
     </div>
@@ -151,6 +152,38 @@
 
     <div id="lista-container"></div>
   </section>
+
+  <!-- PAINEL -->
+  <section class="view" id="view-painel">
+    <div class="panel">
+      <div class="filtros-data">
+        <div class="field">
+          <label>Dia</label>
+          <select id="filtro-dia"></select>
+        </div>
+        <div class="field">
+          <label>Mês</label>
+          <select id="filtro-mes"></select>
+        </div>
+        <div class="field">
+          <label>Ano</label>
+          <select id="filtro-ano"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-grid">
+      <div class="panel">
+        <h3 class="chart-title">Situação das tratativas</h3>
+        <div class="chart-box" id="chart-status"></div>
+      </div>
+      <div class="panel">
+        <h3 class="chart-title">Frotas com não conformidades recorrentes</h3>
+        <div class="chart-box" id="chart-frotas"></div>
+      </div>
+    </div>
+  </section>
+
 
   <footer class="note">
     O e-mail enviado ao destinatário principal traz um PDF com todos os dados e a foto, e dois botões: "Foi feito" e "Não foi feito".

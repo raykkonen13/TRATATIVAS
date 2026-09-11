@@ -159,7 +159,7 @@
   document.getElementById('filtro-placa').addEventListener('input', renderLista);
 
   // ---------- render ----------
-  function render(){ renderStats(); renderLista(); }
+  function render(){ renderStats(); renderLista(); popularFiltrosData(); renderPainel(); }
 
   function renderStats(){
     const list = state.tratativas;
@@ -297,6 +297,124 @@
   document.getElementById('btn-relatorio').addEventListener('click', ()=>{
     window.open('/api/relatorio.pdf', '_blank');
   });
+
+  // ---------- painel / filtros de data ----------
+  const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  function popularFiltrosData(){
+    const diaSel = document.getElementById('filtro-dia');
+    const mesSel = document.getElementById('filtro-mes');
+    const anoSel = document.getElementById('filtro-ano');
+    if(!diaSel || !mesSel || !anoSel) return;
+
+    if(!diaSel.dataset.pronto){
+      diaSel.innerHTML = '<option value="">Todos os dias</option>' +
+        Array.from({length:31}, (_,i)=>i+1).map(d=>`<option value="${d}">${String(d).padStart(2,'0')}</option>`).join('');
+      diaSel.dataset.pronto = '1';
+    }
+    if(!mesSel.dataset.pronto){
+      mesSel.innerHTML = '<option value="">Todos os meses</option>' +
+        MESES.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+      mesSel.dataset.pronto = '1';
+    }
+
+    const anoAtual = anoSel.value;
+    const anos = Array.from(new Set(state.tratativas.map(t=>new Date(t.created_at).getFullYear()))).sort((a,b)=>b-a);
+    anoSel.innerHTML = '<option value="">Todos os anos</option>' + anos.map(a=>`<option value="${a}">${a}</option>`).join('');
+    if(anos.includes(Number(anoAtual))) anoSel.value = anoAtual;
+  }
+
+  ['filtro-dia','filtro-mes','filtro-ano'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('change', renderPainel);
+  });
+
+  function tratativasFiltradasPainel(){
+    const dia = document.getElementById('filtro-dia')?.value;
+    const mes = document.getElementById('filtro-mes')?.value;
+    const ano = document.getElementById('filtro-ano')?.value;
+    return state.tratativas.filter(t=>{
+      if(!t.created_at) return false;
+      const d = new Date(t.created_at);
+      if(dia && d.getDate() !== Number(dia)) return false;
+      if(mes && (d.getMonth()+1) !== Number(mes)) return false;
+      if(ano && d.getFullYear() !== Number(ano)) return false;
+      return true;
+    });
+  }
+
+  const CORES_FROTA = ['#3E93A6','#E0A83E','#D6564C','#4C9E71','#8B6FD6','#D67AB8','#6FA8D6','#B8A24C','#5CBFAE','#C97C4C'];
+
+  function renderPainel(){
+    const painel = document.getElementById('view-painel');
+    if(!painel) return;
+    const list = tratativasFiltradasPainel();
+
+    // gráfico 1: situação
+    const contagem = { 'Em andamento':0, 'Concluído':0, 'Vencido':0 };
+    list.forEach(t=>{ if(contagem.hasOwnProperty(t.status)) contagem[t.status]++; });
+    drawPieChart('chart-status', [
+      { label:'Em andamento', value: contagem['Em andamento'], color:'#3E93A6' },
+      { label:'Concluído', value: contagem['Concluído'], color:'#4C9E71' },
+      { label:'Vencido', value: contagem['Vencido'], color:'#D6564C' }
+    ], 'Nenhuma tratativa no período selecionado.');
+
+    // gráfico 2: frotas com não conformidades recorrentes
+    // recorrente = a mesma frota tem 2 ou mais tratativas lançadas com a mesma gravidade
+    const porFrotaGravidade = {};
+    list.forEach(t=>{
+      if(!t.frota) return;
+      const chave = t.frota + '||' + t.gravidade;
+      porFrotaGravidade[chave] = (porFrotaGravidade[chave] || 0) + 1;
+    });
+    const totalPorFrota = {};
+    Object.entries(porFrotaGravidade).forEach(([chave, qtd])=>{
+      if(qtd < 2) return;
+      const frota = chave.split('||')[0];
+      totalPorFrota[frota] = (totalPorFrota[frota] || 0) + qtd;
+    });
+    const dadosFrota = Object.entries(totalPorFrota)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([frota, qtd], i)=>({ label: frota, value: qtd, color: CORES_FROTA[i % CORES_FROTA.length] }));
+    drawPieChart('chart-frotas', dadosFrota, 'Nenhuma frota com não conformidades recorrentes no período selecionado.');
+  }
+
+  function drawPieChart(containerId, dados, mensagemVazia){
+    const container = document.getElementById(containerId);
+    if(!container) return;
+    const total = dados.reduce((s,d)=>s+d.value, 0);
+    if(total === 0){
+      container.innerHTML = `<div class="chart-empty">${mensagemVazia}</div>`;
+      return;
+    }
+    const cx=110, cy=110, r=100;
+    let anguloAtual = -90;
+    let paths = '';
+    const fatias = dados.filter(d=>d.value > 0);
+    if(fatias.length === 1){
+      paths = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fatias[0].color}"></circle>`;
+    }else{
+      fatias.forEach(d=>{
+        const angulo = (d.value/total)*360;
+        const fim = anguloAtual + angulo;
+        const large = angulo > 180 ? 1 : 0;
+        const x1 = cx + r*Math.cos(anguloAtual*Math.PI/180);
+        const y1 = cy + r*Math.sin(anguloAtual*Math.PI/180);
+        const x2 = cx + r*Math.cos(fim*Math.PI/180);
+        const y2 = cy + r*Math.sin(fim*Math.PI/180);
+        paths += `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${d.color}"></path>`;
+        anguloAtual = fim;
+      });
+    }
+    const legenda = fatias.map(d=>{
+      const pct = ((d.value/total)*100).toFixed(1);
+      return `<div class="legend-item"><span class="swatch" style="background:${d.color}"></span>${escapeHtml(d.label)} — ${d.value} (${pct}%)</div>`;
+    }).join('');
+    container.innerHTML = `
+      <svg viewBox="0 0 220 220" width="220" height="220">${paths}</svg>
+      <div class="legend">${legenda}</div>
+    `;
+  }
 
   carregar();
 })();
