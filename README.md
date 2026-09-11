@@ -18,20 +18,17 @@ App hospedado (Node.js + Supabase + Render) para lançar tratativas de não conf
    - **Project URL** → variável `SUPABASE_URL`
    - **service_role key** (não é a `anon` key) → variável `SUPABASE_SERVICE_KEY`
 
-## 2. Configurar o envio de e-mail (SMTP)
+## 2. Configurar o envio de e-mail (API da Brevo, não SMTP)
 
-O jeito mais simples é usar o Gmail com uma **senha de app**:
+**Importante:** o Render bloqueia portas SMTP (25, 465, 587) de saída no plano gratuito. Por isso o envio é feito pela API HTTP da Brevo (roda em HTTPS, porta 443, que não é bloqueada).
 
-1. Ative a verificação em duas etapas na conta Google que vai enviar os e-mails.
-2. Acesse `myaccount.google.com/apppasswords` e gere uma senha de app.
-3. Use:
-   - `SMTP_HOST=smtp.gmail.com`
-   - `SMTP_PORT=587`
-   - `SMTP_USER=` seu e-mail
-   - `SMTP_PASS=` a senha de app gerada (não é a senha normal)
-   - `FROM_EMAIL=` o mesmo e-mail
-
-Se preferir, qualquer outro provedor SMTP (Outlook, Brevo, SendGrid, Resend, etc.) funciona — é só trocar host/porta/usuário/senha.
+1. Crie uma conta grátis em [brevo.com](https://www.brevo.com) (300 e-mails/dia no plano free).
+2. Vá em **Settings > Senders, Domains & Dedicated IPs** e verifique o e-mail que vai aparecer como remetente (a Brevo manda um e-mail de confirmação).
+3. Vá em **Settings > SMTP & API > API Keys** e clique em **Generate a new API key**.
+4. Use:
+   - `BREVO_API_KEY=` a chave gerada
+   - `FROM_EMAIL=` o e-mail que você verificou no passo 2
+   - `FROM_NAME=` o nome que aparece como remetente (ex.: `Tratativas de Campo`)
 
 ## 3. Publicar no Render
 
@@ -42,7 +39,7 @@ Se preferir, qualquer outro provedor SMTP (Outlook, Brevo, SendGrid, Resend, etc
 3. Em **Environment**, cadastre as variáveis do arquivo `.env.example` com os valores reais:
    - `APP_USER`, `APP_PASS`, `SESSION_SECRET`
    - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
-   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`
+   - `BREVO_API_KEY`, `FROM_EMAIL`, `FROM_NAME`
    - `BASE_URL` → depois que o Render gerar a URL do serviço (ex.: `https://tratativas-de-campo.onrender.com`), volte aqui e preencha com ela. Essa variável é usada para montar os links de "Foi feito" / "Não foi feito" dentro do e-mail — sem ela certa, os links do e-mail não funcionam.
 4. Clique em **Deploy**.
 
@@ -51,6 +48,10 @@ Se preferir, qualquer outro provedor SMTP (Outlook, Brevo, SendGrid, Resend, etc
 - Acesse a URL do Render, entre com o usuário e senha definidos em `APP_USER`/`APP_PASS`.
 - Ao salvar uma tratativa com e-mail preenchido, o sistema já dispara o e-mail com o PDF em anexo e os botões de aprovação.
 - A lista mostra a situação atual e, quando o destinatário já respondeu, mostra a confirmação e o comentário (se houver).
+
+## Sobre lentidão no plano gratuito do Render
+
+No plano free, o Render "desliga" o serviço depois de ~15 minutos sem uso e leva de 30 a 60 segundos para acordar na próxima requisição. Isso é normal do plano gratuito e é diferente do problema de e-mail — se o app estiver lento só na primeira ação depois de um tempo parado, é esse "acordar"; se estiver lento toda vez que você salva uma tratativa, o sintoma é outro (veja a seção de e-mail acima).
 
 ## Observações
 
